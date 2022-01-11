@@ -45,6 +45,15 @@ public class ReservationDAOImpl implements ReservationDAO {
 
     @Override
     public CreateReservationResponse createReservation(String username, UUID hotelUid, Date startDate, Date endDate) {
+        //check hotel
+        HotelIdResponse hotelIdResponse = jdbcTemplate.queryForObject("select id from hotels where hotelUid =:hotelUid",
+                new MapSqlParameterSource().addValue("hotelUid", hotelUid),
+                new BeanPropertyRowMapper<>(HotelIdResponse.class));
+        if(hotelIdResponse == null){
+            System.exit(1);
+            return new CreateReservationResponse(null,null,null);
+        }
+        Integer hotelId = hotelIdResponse.getHotelId();
 
         //get discount and get new price
         HotelPriceResponse hotelPriceResponse = jdbcTemplate.queryForObject(
@@ -62,16 +71,14 @@ public class ReservationDAOImpl implements ReservationDAO {
 
         //create payment
         UUID paymentUid = restTemplate.postForObject("http://localhost:8083/payment/create/{newPrice}", newPrice, UUID.class, newPrice);
+        String paymentStatus = restTemplate.getForObject("http://localhost:8083/payment/getStatus/" + paymentUid, String.class);
 
         //update loyalty
         Integer reservationCount = restTemplate.postForObject("http://localhost:8082/api/v1/addCount/{username}", username, Integer.class, username);
         String status = restTemplate.postForObject("http://localhost:8082/api/v1/updateStatus/{username}", username, String.class, username);
 
         //create reservation
-        HotelIdResponse hotelIdResponse = jdbcTemplate.queryForObject("select id from hotels where hotelUid =:hotelUid",
-                new MapSqlParameterSource().addValue("hotelUid", hotelUid),
-                new BeanPropertyRowMapper<>(HotelIdResponse.class));
-        Integer hotelId = hotelIdResponse.getHotelId();
+
         jdbcTemplate.update(
                 "insert into reservation(reservationUid,username,paymentUid,hotelId,status,startDate,endDate) values (:reservationUid,:username,:paymentUid,:hotelId,:status,:startDate,:endDate)",
                 new MapSqlParameterSource()
@@ -79,7 +86,7 @@ public class ReservationDAOImpl implements ReservationDAO {
                         .addValue("username", username)
                         .addValue("paymentUid", paymentUid)
                         .addValue("hotelId", hotelId)
-                        .addValue("status", "PAID")
+                        .addValue("status", paymentStatus)
                         .addValue("startDate", startDate)
                         .addValue("endDate", endDate));
 

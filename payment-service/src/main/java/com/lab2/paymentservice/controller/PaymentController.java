@@ -21,6 +21,10 @@ public class PaymentController {
     public UUID createPayment(@PathVariable("price") Integer price){
         return paymentDAO.createPayment(price);
     }
+    @GetMapping("/getStatus/{paymentUid}")
+    public String getPaymentStatus(@PathVariable("paymentUid") UUID paymentUid){
+        return paymentDAO.getPaymentStatus(paymentUid);
+    }
 
     @GetMapping("/get/{paymentUid}")
     public PaymentData getPayment(@PathVariable("paymentUid") UUID paymentUid){

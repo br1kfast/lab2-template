@@ -13,5 +13,5 @@ public interface PaymentDAO {
     PaymentData getPayment(UUID paymentUid);
     StatusResponse cancelPayment(UUID paymentUid);
     UserPaymentResponse getUserPaymentResponse(UUID paymentUid);
-
+    String getPaymentStatus(UUID paymentUid);
 }

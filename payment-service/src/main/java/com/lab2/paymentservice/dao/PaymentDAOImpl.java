@@ -1,9 +1,6 @@
 package com.lab2.paymentservice.dao;
 
-import com.lab2.paymentservice.data.CreatePaymentResponse;
-import com.lab2.paymentservice.data.PaymentData;
-import com.lab2.paymentservice.data.StatusResponse;
-import com.lab2.paymentservice.data.UserPaymentResponse;
+import com.lab2.paymentservice.data.*;
 import jdk.jshell.Snippet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
@@ -31,6 +28,14 @@ public class PaymentDAOImpl implements PaymentDAO{
                         .addValue("status", "PAID")
                         .addValue("price", price));
         return u;
+    }
+    @Override
+    public String getPaymentStatus(UUID paymentUid){
+        PaymentStatusResponse paymentStatusResponse = jdbcTemplate.queryForObject(
+                "select*from payment where paymentUid =:paymentUid",
+                new MapSqlParameterSource().addValue("paymentUid", paymentUid),
+                new BeanPropertyRowMapper<>(PaymentStatusResponse.class));
+        return paymentStatusResponse.getStatus();
     }
 
     @Override
